@@ -18,7 +18,6 @@ import Bio.Motions.Types
 import Bio.Motions.Common
 import Bio.Motions.Representation.Class
 import Bio.Motions.Representation.Common
-import Bio.Motions.Representation.Dump
 import Control.Lens
 import Control.Monad
 import Control.Monad.IO.Class
@@ -94,8 +93,8 @@ instance Wrapper m f => ReadRepresentation m (ChainRepresentation f) where
     {-# INLINE getAtomAt #-}
 
 instance Monad m => Representation m PureChainRepresentation where
-    loadDump = loadDump'
-    makeDump = makeDump'
+    loadDump = undefined
+    makeDump = undefined
     generateMove = generateMove'
 
     performMove (MoveFromTo from to) repr
@@ -113,8 +112,8 @@ instance Monad m => Representation m PureChainRepresentation where
         space' = M.insert to (atom & position .~ to) . M.delete from $ space repr
 
 instance MonadIO m => Representation m IOChainRepresentation where
-    loadDump = loadDump'
-    makeDump = makeDump'
+    loadDump = undefined
+    makeDump = undefined
     generateMove = generateMove'
 
     performMove (MoveFromTo from to) repr = do
@@ -124,34 +123,6 @@ instance MonadIO m => Representation m IOChainRepresentation where
         atom = space repr M.! from
         space' = M.insert to atom $ M.delete from $ space repr
 
--- |An 'f'-polymorphic implementation of 'loadDump' for 'ChainRepresentation f'.
-loadDump' :: _ => Dump -> FreezePredicate -> m (ChainRepresentation f)
-loadDump' Dump{..} isFrozen = do
-    relBinders <- mapM relocate dumpBinders
-    relBeads <- mapM relocate (concat chains)
-    pure ChainRepresentation
-        { binders = V.fromList relBinders
-        , moveableBinders = U.fromList [i | (i, b) <- zip [0..] relBinders, b ^. binderType /= laminType]
-        , beads = V.fromList relBeads
-        , moveableBeads = U.fromList [i | (i, b) <- zip [0..] relBeads, not . isFrozen $ b ^. beadSignature]
-        , chainIndices = U.fromList . scanl' (+) 0 $ map length chains
-        , space = M.fromList $ zipWith convert relBinders dumpBinders ++ zipWith convert relBeads (concat chains)
-        , radius = dumpRadius
-        }
-  where
-    chains = addIndices dumpChains
-    convert new old = (old ^. position, asAtom' new)
-
--- |An 'f'-polymorphic implementation of 'makeDump' for 'ChainRepresentation f'.
-makeDump' :: _ => ChainRepresentation f -> m Dump
-makeDump' repr = do
-    relBinders <- mapM relocate (V.toList $ binders repr)
-    relChains <- mapM (mapM relocate . V.toList . getChain' repr) [0..U.length (chainIndices repr) - 2]
-    pure Dump
-        { dumpBinders = relBinders
-        , dumpChains = (dropIndices <$>) <$> relChains
-        , dumpRadius = radius repr
-        }
 
 -- |An 'f'-polymorphic implementation of 'generateMive' for 'ChainRepresentation f'.
 generateMove' :: _ => ChainRepresentation f -> m Move

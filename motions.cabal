@@ -20,14 +20,12 @@ library
                        Bio.Motions.Representation.Chain,
                        Bio.Motions.Representation.Chain.Internal,
                        Bio.Motions.Representation.Common,
-                       Bio.Motions.Representation.Dump,
                        Bio.Motions.Utils.FreezePredicateParser,
                        Bio.Motions.Utils.RepetitionGuard,
                        Bio.Motions.Types,
                        Bio.Motions.Common,
                        Bio.Motions.BED,
                        Bio.Motions.Engine
-                       Bio.Motions.StateInitialisation
   -- other-modules:
   -- other-extensions:
   build-depends:       base >=4.8,
@@ -44,7 +42,6 @@ library
                        ghc-prim >=0.4,
                        constraints >=0.6,
                        random-shuffle >=0.0.4,
-                       hPDB >= 1.2,
                        bytestring >= 0.10
   hs-source-dirs:      src
   default-language:    Haskell2010

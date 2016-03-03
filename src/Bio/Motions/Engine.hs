@@ -16,8 +16,6 @@ module Bio.Motions.Engine where
 import Bio.Motions.Types
 import Bio.Motions.Common
 import Bio.Motions.Representation.Class
-import Bio.Motions.PDB.Write
-import Bio.Motions.PDB.Meta
 import Bio.Motions.Representation.Common
 import Bio.Motions.Representation.Dump
 import Bio.Motions.Utils.FreezePredicateParser
