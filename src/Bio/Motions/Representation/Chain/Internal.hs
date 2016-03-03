@@ -32,6 +32,7 @@ import qualified Data.Map.Strict as M
 import qualified Data.Vector as V
 import qualified Data.Vector.Unboxed as U
 import Linear
+import Control.Applicative
 
 data ChainRepresentation f = ChainRepresentation
     { space :: !(Space' f)
@@ -162,7 +163,15 @@ generateMove' repr@ChainRepresentation{..} = do
         pick moveableBeads beads [illegalBeadMove repr]
   where
     -- |Pick a random move of some atom in a sequence
-    pick :: _  -- Under some cumbersome constraints...
+    pick ::  (Foldable t,
+             Alternative m,
+             MonadRandom m,
+             DS.IsSequence ixs,
+             DS.IsSequence s,
+             Wrapper m f,
+             Element ixs ~ DS.Index s,
+             Element s ~ Located' f a,
+             DS.Index ixs ~ Int)
         => ixs -- ^The sequence of moveable atoms' indices
         -> s -- ^The sequence of atoms
         -> t (Move -> Element s -> m Bool) -- ^A 'Traversable' of additional move constraints

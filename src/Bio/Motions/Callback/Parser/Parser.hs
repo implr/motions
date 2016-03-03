@@ -21,6 +21,7 @@ Portability : unportable
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE UndecidableSuperClasses #-}
 module Bio.Motions.Callback.Parser.Parser
     ( CallbackFrequency(..)
     , AtomType(..)
@@ -40,7 +41,7 @@ import Data.Maybe
 import Text.Parsec
 import qualified Text.Parsec.Token as P
 import Text.Parsec.Language (javaStyle)
-import GHC.Prim
+import GHC.Exts
 import Bio.Motions.Types
 
 -- |Represents the frequency a callback has to be run
