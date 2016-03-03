@@ -80,16 +80,9 @@ retrieveLocated = relocate
 
 instance Wrapper m f => ReadRepresentation m (ChainRepresentation f) where
     getBinders ChainRepresentation{..} f = mapM retrieveLocated binders >>= f
-    {-# INLINE getBinders #-}
-
     getNumberOfChains ChainRepresentation{..} = pure $ U.length chainIndices - 1
-    {-# INLINE getNumberOfChains #-}
-
     getChain repr ix f = mapM retrieveLocated (getChain' repr ix) >>= f
-    {-# INLINE getChain #-}
-
     getAtomAt pos ChainRepresentation{..} = pure $ Located pos . (^. located) <$> M.lookup pos space
-    {-# INLINE getAtomAt #-}
 
 instance Monad m => Representation m PureChainRepresentation where
     generateMove = generateMove'
