@@ -39,16 +39,11 @@ data SimulationState repr = SimulationState
 
 -- |Describes how the simulation should run.
 data RunSettings repr score = RunSettings
-    { pdbFile :: FilePath
-    -- ^ Path to the PDB output file.
-    , numSteps :: Int
+    { 
+    numSteps :: Int
     -- ^ Number of simulation steps.
-    , writeIntermediatePDB :: Bool
-    -- ^ Whether to write intermediate PDB frames.
     , verboseCallbacks :: Bool
     -- ^ Enable verbose callback output.
-    , simplePDB :: Bool
-    -- ^ Whether to write simpler residue/atom names in the PDB file.
     , freezeFile :: Maybe FilePath
     -- ^ A file containing the ranges of the frozen beads' indices.
     }
@@ -69,25 +64,9 @@ step = runMaybeT $ do
     factor :: Double
     factor = 2
 
-pushPDB :: _ => Handle -> PDBMeta -> m ()
-pushPDB handle pdbMeta = do
-    st@SimulationState{..} <- get
-    dump <- removeLamins <$> makeDump repr -- TODO: remove lamins?
 
-    let frameHeader = FrameHeader { headerSeqNum = frameCounter
-                                  , headerStep = stepCounter
-                                  , headerTitle = "chromosome;bonds="
-                                  }
-
-    liftIO $ writePDB handle frameHeader pdbMeta dump >> hPutStrLn handle "END"
-
-    put st { frameCounter = frameCounter + 1 }
-  where
-    removeLamins d = d { dumpBinders = filter notLamin $ dumpBinders d }
-    notLamin b = b ^. binderType /= laminType
-
-stepAndWrite :: _ => Handle -> Maybe Handle -> Bool -> PDBMeta -> m ()
-stepAndWrite callbacksHandle pdbHandle verbose pdbMeta = do
+stepAndWrite :: _ => Handle -> m ()
+stepAndWrite callbacksHandle = do
     step -- TODO: do something with the move
 
     modify $ \s -> s { stepCounter = stepCounter s + 1 }
@@ -103,23 +82,14 @@ simulate (RunSettings{..} :: RunSettings repr score) dump = do
     let evs = nub . map dumpBeadEV . concat . dumpChains $ dump
         bts = nub . map (^. binderType) . dumpBinders $ dump
         chs = nub . map (^. beadChain) . concat . dumpIndexedChains $ dump
-        pdbMeta = fromMaybe (error pdbError) $ if simplePDB then mkSimplePDBMeta chs
-                                                            else mkPDBMeta evs bts chs
-        pdbMetaFile = pdbFile ++ ".meta"
 
     let stepCounter = 0
         frameCounter = 0
         st = SimulationState{..}
 
     let callbacksHandle = stdout
-    pdbHandle <- liftIO $ openFile pdbFile WriteMode
-    st' <- flip execStateT st $ do
-        when writeIntermediatePDB $ pushPDB pdbHandle pdbMeta
+    st' <- flip execStateT st $
         replicateM_ numSteps $ stepAndWrite callbacksHandle
-            (guard writeIntermediatePDB >> Just pdbHandle) verboseCallbacks pdbMeta
-        unless writeIntermediatePDB $ pushPDB pdbHandle pdbMeta
-    liftIO $ hClose pdbHandle
-    liftIO $ withFile pdbMetaFile WriteMode $ \h -> writePDBMeta h evs bts chs pdbMeta
 
     let SimulationState{..} = st'
     makeDump repr
