@@ -163,15 +163,7 @@ generateMove' repr@ChainRepresentation{..} = do
         pick moveableBeads beads [illegalBeadMove repr]
   where
     -- |Pick a random move of some atom in a sequence
-    pick ::  (Foldable t,
-             Alternative m,
-             MonadRandom m,
-             DS.IsSequence ixs,
-             DS.IsSequence s,
-             Wrapper m f,
-             Element ixs ~ DS.Index s,
-             Element s ~ Located' f a,
-             DS.Index ixs ~ Int)
+    pick :: _
         => ixs -- ^The sequence of moveable atoms' indices
         -> s -- ^The sequence of atoms
         -> t (Move -> Element s -> m Bool) -- ^A 'Traversable' of additional move constraints

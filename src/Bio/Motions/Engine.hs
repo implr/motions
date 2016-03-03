@@ -16,12 +16,10 @@ module Bio.Motions.Engine where
 import Bio.Motions.Types
 import Bio.Motions.Common
 import Bio.Motions.Representation.Class
-import Bio.Motions.Callback.Class
 import Bio.Motions.PDB.Write
 import Bio.Motions.PDB.Meta
 import Bio.Motions.Representation.Common
 import Bio.Motions.Representation.Dump
-import Bio.Motions.EnabledCallbacks
 import Bio.Motions.Utils.FreezePredicateParser
 import Text.Parsec.String
 
@@ -33,11 +31,8 @@ import Control.Lens
 import Data.List
 import Data.Maybe
 
-data SimulationState repr score = SimulationState
+data SimulationState repr = SimulationState
     { repr :: repr
-    , score :: score
-    , preCallbackResults :: [CallbackResult Pre]
-    , postCallbackResults :: [CallbackResult Post]
     , stepCounter :: Int
     , frameCounter :: Int
     }
@@ -58,26 +53,15 @@ data RunSettings repr score = RunSettings
     -- ^ A file containing the ranges of the frozen beads' indices.
     }
 
-step :: (MonadRandom m, MonadState (SimulationState repr score) m,
-         Representation (MaybeT m) repr, Score score) => m (Maybe Move)
+step :: (MonadRandom m, MonadState (SimulationState repr) m,
+         Representation (MaybeT m) repr) => m (Maybe Move)
 step = runMaybeT $ do
     st@SimulationState{..} <- get
     move <- generateMove repr
-    newScore <- updateCallback repr score move
-    newPreCallbackResults <- mapM (updateCallbackResult repr move) preCallbackResults
-
-    let delta = fromIntegral $ newScore - score
-    unless (delta >= 0) $ do
-        r <- getRandomR (0, 1)
-        guard $ r < exp (delta * factor)
 
     (newRepr, _) <- performMove move repr
-    newPostCallbackResults <- mapM (updateCallbackResult newRepr move) postCallbackResults
 
     put st { repr = newRepr
-           , score = newScore
-           , preCallbackResults = newPreCallbackResults
-           , postCallbackResults = newPostCallbackResults
            }
 
     pure move
@@ -92,7 +76,7 @@ pushPDB handle pdbMeta = do
 
     let frameHeader = FrameHeader { headerSeqNum = frameCounter
                                   , headerStep = stepCounter
-                                  , headerTitle = "chromosome;bonds=" ++ show score
+                                  , headerTitle = "chromosome;bonds="
                                   }
 
     liftIO $ writePDB handle frameHeader pdbMeta dump >> hPutStrLn handle "END"
@@ -104,26 +88,10 @@ pushPDB handle pdbMeta = do
 
 stepAndWrite :: _ => Handle -> Maybe Handle -> Bool -> PDBMeta -> m ()
 stepAndWrite callbacksHandle pdbHandle verbose pdbMeta = do
-    oldScore <- gets score
     step -- TODO: do something with the move
-    newScore <- gets score
-
-    when (oldScore /= newScore) $ do
-        writeCallbacks callbacksHandle verbose
-        case pdbHandle of
-          Just handle -> pushPDB handle pdbMeta
-          Nothing -> pure ()
 
     modify $ \s -> s { stepCounter = stepCounter s + 1 }
 
-writeCallbacks :: _ => Handle -> Bool -> m ()
-writeCallbacks handle verbose = do
-    preStr <- fmap resultStr <$> gets preCallbackResults
-    postStr <- fmap resultStr <$> gets postCallbackResults
-    liftIO . hPutStrLn handle . intercalate separator $ preStr ++ postStr
-  where
-    resultStr (CallbackResult cb) = (if verbose then getCallbackName cb ++ ": " else "") ++ show cb
-    separator = if verbose then "\n" else " "
 
 simulate :: _ => RunSettings repr score -> Dump -> m Dump
 simulate (RunSettings{..} :: RunSettings repr score) dump = do
@@ -139,9 +107,6 @@ simulate (RunSettings{..} :: RunSettings repr score) dump = do
                                                             else mkPDBMeta evs bts chs
         pdbMetaFile = pdbFile ++ ".meta"
 
-    score :: score <- runCallback repr
-    preCallbackResults <- getCallbackResults repr enabledPreCallbacks
-    postCallbackResults <- getCallbackResults repr enabledPostCallbacks
     let stepCounter = 0
         frameCounter = 0
         st = SimulationState{..}

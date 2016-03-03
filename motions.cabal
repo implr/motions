@@ -23,12 +23,12 @@ library
                        Bio.Motions.Representation.Dump,
                        Bio.Motions.Utils.FreezePredicateParser,
                        Bio.Motions.Utils.RepetitionGuard,
-                       Bio.Motions.Callback.Class,
-                       Bio.Motions.Callback.GyrationRadius,
-                       Bio.Motions.Callback.StandardScore,
-                       Bio.Motions.Callback.Parser.Parser,
-                       Bio.Motions.Callback.Parser.TH,
-                       Bio.Motions.EnabledCallbacks,
+                       --Bio.Motions.Callback.Class,
+                       --Bio.Motions.Callback.GyrationRadius,
+                       --Bio.Motions.Callback.StandardScore,
+                       --Bio.Motions.Callback.Parser.Parser,
+                       --Bio.Motions.Callback.Parser.TH,
+                       --Bio.Motions.EnabledCallbacks,
                        Bio.Motions.Types,
                        Bio.Motions.Common,
                        Bio.Motions.PDB.Meta,
@@ -67,31 +67,3 @@ executable motions
                        transformers >=0.4,
                        motions
   default-language:    Haskell2010
-
-test-suite spec
-    type:              exitcode-stdio-1.0
-    main-is:           Main.hs
-    build-depends:     motions,
-                       base >=4.8,
-                       hspec >=2.2,
-                       hspec-jenkins >= 0.1.1,
-                       QuickCheck >=2.8,
-                       linear >=1.20,
-                       vector >=0.11,
-                       mono-traversable >=0.10,
-                       parsec >=3.1,
-                       containers >=0.5,
-                       lens >=4.13,
-                       MonadRandom >=0.4,
-                       mtl >=2.2,
-                       transformers >=0.4,
-                       smallcheck >=1.1,
-                       hspec-smallcheck >=0.4
-    default-language:  Haskell2010
-    hs-source-dirs:    test
-    other-modules:     BasicSpec,
-                       BEDSpec,
-                       PDBSpec,
-                       DumpSpec,
-                       StateInitialisationSpec,
-                       FreezePredicateParserSpec
