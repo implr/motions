@@ -23,17 +23,8 @@ import Data.MonoTraversable
 -- 'm' denotes a 'Monad' (or 'Applicative') in which the
 -- simulation takes place
 class ReadRepresentation m repr => Representation m repr where
-    -- |Loads the state from a 'Dump'
-    loadDump :: a -> FreezePredicate -> m repr
-
-    -- |Saves the current state in a 'Dump'
-    makeDump :: repr -> m a
-
     -- |Generates a random valid 'Move' or 'empty'.
     generateMove :: (MonadRandom m, Alternative m) => repr -> m Move
-
-    -- |Applies a 'Move' to the state
-    performMove :: Move -> repr -> m (repr, [BinderChange])
 
 -- |A read-only interface to a 'Representation'
 class ReadRepresentation m repr where

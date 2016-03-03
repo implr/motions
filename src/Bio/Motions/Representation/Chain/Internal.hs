@@ -50,7 +50,6 @@ data ChainRepresentation f = ChainRepresentation
     }
 
 type PureChainRepresentation = ChainRepresentation Identity
-type IOChainRepresentation = ChainRepresentation IORef
 
 -- |Used to wrap and unwrap 'f'.
 --
@@ -93,35 +92,7 @@ instance Wrapper m f => ReadRepresentation m (ChainRepresentation f) where
     {-# INLINE getAtomAt #-}
 
 instance Monad m => Representation m PureChainRepresentation where
-    loadDump = undefined
-    makeDump = undefined
     generateMove = generateMove'
-
-    performMove (MoveFromTo from to) repr
-        | Binder binderSig <- atom = pure $
-            let Just idx = V.elemIndex (Located from binderSig) $ binders repr
-            in  (repr { space = space'
-                      , binders = binders repr V.// [(idx, Located to binderSig)]
-                      }, [])
-        | Bead beadSig <- atom = pure
-            (repr { space = space'
-                  , beads = beads repr V.// [(beadSig ^. beadAtomIndex, Located to beadSig)]
-                  }, [])
-      where
-        atom = space repr M.! from
-        space' = M.insert to (atom & position .~ to) . M.delete from $ space repr
-
-instance MonadIO m => Representation m IOChainRepresentation where
-    loadDump = undefined
-    makeDump = undefined
-    generateMove = generateMove'
-
-    performMove (MoveFromTo from to) repr = do
-        liftIO $ writeIORef (atom ^. wrappedPosition) to
-        pure (repr { space = space' }, [])
-      where
-        atom = space repr M.! from
-        space' = M.insert to atom $ M.delete from $ space repr
 
 
 -- |An 'f'-polymorphic implementation of 'generateMive' for 'ChainRepresentation f'.
