@@ -20,8 +20,6 @@ library
                        Bio.Motions.Representation.Chain,
                        Bio.Motions.Representation.Chain.Internal,
                        Bio.Motions.Representation.Common,
-                       --Bio.Motions.Utils.FreezePredicateParser,
-                       Bio.Motions.Utils.RepetitionGuard,
                        Bio.Motions.Types,
                        Bio.Motions.Common
   -- other-modules:
@@ -35,20 +33,8 @@ library
                        mtl >=2.2,
                        containers >=0.5,
                        transformers >=0.4,
-                       parsec >=3.1,
-                       template-haskell >=2.10,
                        ghc-prim >=0.4,
                        constraints >=0.6,
                        random-shuffle >=0.0.4
   hs-source-dirs:      src
-  default-language:    Haskell2010
-
-executable motions
-  main-is:             Main.hs
-  build-depends:       base >=4.8,
-                       vector >=0.11,
-                       MonadRandom >=0.4,
-                       optparse-applicative >=0.12,
-                       transformers >=0.4,
-                       motions
   default-language:    Haskell2010
